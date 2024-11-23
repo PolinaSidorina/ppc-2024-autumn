@@ -15,7 +15,7 @@
 namespace sidorina_p_broadcast_mpi {
 
 class RefBroadcast : public ppc::core::Task {
-  public:
+ public:
   explicit RefBroadcast(std::shared_ptr<ppc::core::TaskData> taskData_) : Task(std::move(taskData_)) {}
   bool pre_processing() override;
   bool validation() override;
