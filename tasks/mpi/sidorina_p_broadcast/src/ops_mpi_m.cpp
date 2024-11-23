@@ -1,0 +1,156 @@
+#include "mpi/sidorina_p_broadcast/include/ops_mpi_m.hpp"
+
+#include <algorithm>
+#include <functional>
+#include <random>
+#include <string>
+#include <thread>
+#include <vector>
+
+using namespace boost::mpi;
+
+template <typename T>
+inline void sidorina_p_broadcast_mpi::Broadcast::broadcast_m(const boost::mpi::communicator& comm,T& value, int root) {
+  int n = comm.size();
+  if (n <= 2) {
+    if (comm.rank() == root) {
+      if (n == 1) {
+        return;
+      } else {
+        comm.send(1 - root, 0, value);
+      }
+    } else {
+      comm.recv(root, 0, value);
+    }
+    return;
+  }
+
+  std::vector<int> recipients(comm.size());
+
+  if (comm.rank() == root) {
+    recipients[ (root + 1) % comm.size()] = value;
+    recipients[ (root + 2) % comm.size()] = value;
+  } else {
+    int id_elem = comm.rank() - root;
+    if (comm.rank() < root) {
+      id_elem = comm.size() - root + comm.rank();
+    }
+
+    int id_sender = (root + (id_elem - 1) / 2) % comm.size();
+    
+    comm.recv(id_sender, 0, value);
+  }
+}
+
+template <typename T>
+inline void sidorina_p_broadcast_mpi::Broadcast::broadcast_m(const boost::mpi::communicator& comm, T& value, int n, int root) {
+  int n = comm.size();
+  if (n <= 2) {
+    if (comm.rank() == root) {
+      if (n == 1) {
+        return;
+      } else {
+        comm.send(1 - root, 0, value, n);
+      }
+    } else {
+      comm.recv(root, 0, value, n);
+    }
+    return;
+  }
+
+  std::vector<int> recipients(comm.size());
+
+  if (comm.rank() == root) {
+    recipients[(root + 1) % comm.size()] = value;
+    recipients[(root + 2) % comm.size()] = value;
+  } else {
+    int id_elem = comm.rank() - root;
+    if (comm.rank() < root) {
+      id_elem = comm.size() - root + comm.rank();
+    }
+
+    int id_sender = (root + (id_elem - 1) / 2) % comm.size();
+
+    comm.recv(id_sender, 0, value, n);
+  }
+}
+
+bool sidorina_p_broadcast_mpi::Broadcast::pre_processing() {
+  internal_order_test();
+
+  if (world.rank() == 0) {
+    int sz1 = taskData->inputs_count[0];
+    int sz2 = taskData->inputs_count[1];
+    delta_ = sz2 / world.size() + (sz2 % world.size());
+    size_ = sz1;
+
+    arr.assign(reinterpret_cast<const int*>(taskData->inputs[0]),
+               reinterpret_cast<const int*>(taskData->inputs[0]) + sz1);
+    term.assign(reinterpret_cast<const int*>(taskData->inputs[1]),
+                reinterpret_cast<const int*>(taskData->inputs[1]) + sz2);
+  }
+
+  return true;
+}
+
+bool sidorina_p_broadcast_mpi::Broadcast::validation() {
+  internal_order_test();
+  if (world.rank() == 0) {
+    return taskData->inputs_count[0] > 0 &&
+           taskData->inputs_count[1] > 0 &&
+           taskData->outputs_count[0] > 0 &&
+           taskData->inputs_count[0] == taskData->outputs_count[0];
+  }
+  return true;
+}
+
+bool sidorina_p_broadcast_mpi::Broadcast::run() {
+  internal_order_test();
+
+  int root = 0;
+  MPI_Bcast(&delta_, 1, MPI_INT, root, world);
+  MPI_Bcast(&size_, 1, MPI_INT, root, world);
+
+  res.resize(size_, 0);
+  if (world.rank() != root) {
+    arr.resize(size_);
+  } else {
+    arr.resize(size_);
+    std::copy(term.data(), term.data() + delta_, arr.begin());
+  }
+
+  MPI_Bcast(arr.data(), size_, MPI_INT, root, world);
+
+  if (world.rank() == root) {
+    for (size_t p = 1; p < world.size(); ++p) {
+      MPI_Send(term.data() + p * delta_, delta_, MPI_INT, p, 0, world);
+    }
+  } else {
+    MPI_Recv(term.data(), delta_, MPI_INT, root, 0, world, MPI_STATUS_IGNORE);
+  }
+
+  for (size_t i = 0; i < static_cast<int>(arr.size()); ++i) {
+    int num = arr[i];
+
+    int result = 0;
+    for (size_t t : term) {
+      if (t >= 0) {
+        result += num+t;
+      }
+    }
+    arr[i] = result;
+  }
+
+  reduce(world, arr.data(), arr.size(), res.data(), std::plus<int>(), 0);
+
+  return true;
+}
+
+bool sidorina_p_broadcast_mpi::Broadcast::post_processing() {
+  internal_order_test();
+  if (world.rank() == 0) {
+    int* answer = reinterpret_cast<int*>(taskData->outputs[0]);
+    std::copy(res.begin(), res.end(), answer);
+  }
+  return true;
+}
