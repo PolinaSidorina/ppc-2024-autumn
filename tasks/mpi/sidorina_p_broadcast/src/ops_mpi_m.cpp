@@ -42,8 +42,8 @@ inline void sidorina_p_broadcast_mpi::Broadcast::broadcast_m(const boost::mpi::c
 }
 
 template <typename T>
-inline void sidorina_p_broadcast_mpi::Broadcast::broadcast_m(const boost::mpi::communicator& comm, T& value, int n, int root) {
-  int n = comm.size();
+inline void sidorina_p_broadcast_mpi::Broadcast::broadcast_m(const boost::mpi::communicator& comm, T& value,
+                                                              int n, int root) {
   if (n <= 2) {
     if (comm.rank() == root) {
       if (n == 1) {
@@ -95,7 +95,8 @@ bool sidorina_p_broadcast_mpi::Broadcast::pre_processing() {
 bool sidorina_p_broadcast_mpi::Broadcast::validation() {
   internal_order_test();
   if (world.rank() == 0) {
-    return taskData->inputs_count[0] > 0 && taskData->inputs_count[1] > 0 && taskData->outputs_count[0] > 0 && taskData->inputs_count[0] == taskData->outputs_count[0];
+    return taskData->inputs_count[0] > 0 && taskData->inputs_count[1] > 0 && taskData->outputs_count[0] > 0 &&
+        taskData->inputs_count[0] == taskData->outputs_count[0];
   }
   return true;
 }
