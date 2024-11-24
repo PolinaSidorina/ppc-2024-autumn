@@ -30,7 +30,8 @@ bool sidorina_p_broadcast_mpi::RefBroadcast::pre_processing() {
 bool sidorina_p_broadcast_mpi::RefBroadcast::validation() {
   internal_order_test();
   if (world.rank() == 0) {
-    return taskData->inputs_count[0] > 0 && taskData->inputs_count[1] > 0 && taskData->outputs_count[0] > 0 && taskData->inputs_count[0] == taskData->outputs_count[0];
+    return taskData->inputs_count[0] > 0 && taskData->inputs_count[1] > 0 && taskData->outputs_count[0] > 0 &&
+           taskData->inputs_count[0] == taskData->outputs_count[0];
   }
   return true;
 }

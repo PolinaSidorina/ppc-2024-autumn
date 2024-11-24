@@ -42,8 +42,8 @@ inline void sidorina_p_broadcast_mpi::Broadcast::broadcast_m(const boost::mpi::c
 }
 
 template <typename T>
-inline void sidorina_p_broadcast_mpi::Broadcast::broadcast_m(const boost::mpi::communicator& comm, T& value,
-                                                             int n, int root) {
+inline void sidorina_p_broadcast_mpi::Broadcast::broadcast_m(const boost::mpi::communicator& comm, T& value, int n,
+                                                             int root) {
   if (n <= 2) {
     if (comm.rank() == root) {
       if (n == 1) {
