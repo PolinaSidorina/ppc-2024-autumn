@@ -15,8 +15,8 @@ bool sidorina_p_broadcast_mpi::RefBroadcast::pre_processing() {
   if (world.rank() == 0) {
     int sz1 = taskData->inputs_count[0];
     int sz2 = taskData->inputs_count[1];
-    delta_ = sz2 / world.size() + (sz2 % world.size());
-    size_ = sz1;
+    del = sz2 / world.size() + (sz2 % world.size());
+    sz = sz1;
 
     arr.assign(reinterpret_cast<const int*>(taskData->inputs[0]),
                reinterpret_cast<const int*>(taskData->inputs[0]) + sz1);
@@ -39,30 +39,29 @@ bool sidorina_p_broadcast_mpi::RefBroadcast::run() {
   internal_order_test();
 
   int root = 0;
-  MPI_Bcast(&delta_, 1, MPI_INT, root, world);
-  MPI_Bcast(&size_, 1, MPI_INT, root, world);
+  MPI_Bcast(&del, 1, MPI_INT, root, world);
+  MPI_Bcast(&sz, 1, MPI_INT, root, world);
 
-  res.resize(size_, 0);
+  res.resize(sz, 0);
   if (world.rank() != root) {
-    arr.resize(size_);
+    arr.resize(sz);
   } else {
-    arr.resize(size_);
-    std::copy(term.data(), term.data() + delta_, arr.begin());
+    arr.resize(sz);
+    std::copy(term.data(), term.data(), arr.begin());
   }
 
-  MPI_Bcast(arr.data(), size_, MPI_INT, root, world);
+  MPI_Bcast(arr.data(), sz, MPI_INT, root, world);
 
   if (world.rank() == root) {
     for (int p = 1; p < world.size(); ++p) {
-      MPI_Send(term.data() + p * delta_, delta_, MPI_INT, p, 0, world);
+      MPI_Send(term.data() + p * del, del, MPI_INT, p, 0, world);
     }
   } else {
-    MPI_Recv(term.data(), delta_, MPI_INT, root, 0, world, MPI_STATUS_IGNORE);
+    MPI_Recv(term.data(), del, MPI_INT, root, 0, world, MPI_STATUS_IGNORE);
   }
 
-  for (int i = 0; i < static_cast<int>(arr.size()); ++i) {
+  for (int i = 0; i < static_cast<int>(arr.size()); i++) {
     int num = arr[i];
-
     int result = 0;
     for (int t : term) {
       if (t >= 0) {

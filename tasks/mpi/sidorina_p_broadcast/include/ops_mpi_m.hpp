@@ -31,8 +31,8 @@ class Broadcast : public ppc::core::Task {
   std::vector<int> arr;
   std::vector<int> term;
   std::vector<int> res;
-  int delta_ = 0;
-  int size_ = 0;
+  int del = 0;
+  int sz = 0;
   boost::mpi::communicator world;
 };
 }  // namespace sidorina_p_broadcast_mpi
