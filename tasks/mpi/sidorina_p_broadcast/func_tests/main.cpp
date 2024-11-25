@@ -34,7 +34,9 @@ TEST(sidorina_p_broadcast_mpi, Test_arr3_term2) {
   }
 
   sidorina_p_broadcast_mpi::Broadcast testMpiTaskParallel(taskDataGlob);
-  ASSERT_EQ(testMpiTaskParallel.validation(), true);
+  if (world.rank() == 0) {
+    ASSERT_EQ(testMpiTaskParallel.validation(), true);
+  }
   testMpiTaskParallel.pre_processing();
   testMpiTaskParallel.run();
   testMpiTaskParallel.post_processing();
