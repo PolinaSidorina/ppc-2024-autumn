@@ -185,12 +185,12 @@ TEST(sidorina_p_broadcast_mpi, Test_random) {
   if (world.rank() == 0) {
     array = std::vector<int>(0);
     array.resize(100, 0);
-    for (int i = 0; i < array.size(); i++) {
+    for (unsigned long i = 0; i < array.size(); i++) {
       array[i] = round(rand() % 100);
     }
     terms = std::vector<int>(0);
     terms.resize(100, 0);
-    for (int j = 0; j < terms.size(); j++) {
+    for (unsigned long j = 0; j < terms.size(); j++) {
       terms[j] = round(rand() % 100);
     }
 
