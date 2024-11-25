@@ -62,7 +62,7 @@ TEST(sidorina_p_broadcast_mpi, Test_arr3_term2) {
   }
 }
 
-/*TEST(sidorina_p_broadcast_mpi, Test_arr3_term3) {
+TEST(sidorina_p_broadcast_mpi, Test_arr3_term3) {
   boost::mpi::communicator world;
 
   std::vector<int> array;
@@ -88,7 +88,9 @@ TEST(sidorina_p_broadcast_mpi, Test_arr3_term2) {
   }
 
   sidorina_p_broadcast_mpi::Broadcast testMpiTaskParallel(taskDataGlob);
-  ASSERT_EQ(testMpiTaskParallel.validation(), true);
+  if (world.rank() == 0) {
+    ASSERT_EQ(testMpiTaskParallel.validation(), true);
+  }
   testMpiTaskParallel.pre_processing();
   testMpiTaskParallel.run();
   testMpiTaskParallel.post_processing();
@@ -104,7 +106,9 @@ TEST(sidorina_p_broadcast_mpi, Test_arr3_term2) {
     taskDataRef->outputs_count.emplace_back(result.size());
   }
   sidorina_p_broadcast_mpi::RefBroadcast testMpiTaskSequential(taskDataRef);
-  ASSERT_EQ(testMpiTaskSequential.validation(), true);
+  if (world.rank() == 0) {
+    ASSERT_EQ(testMpiTaskSequential.validation(), true);
+  }
   testMpiTaskSequential.pre_processing();
   testMpiTaskSequential.run();
   testMpiTaskSequential.post_processing();
@@ -140,7 +144,9 @@ TEST(sidorina_p_broadcast_mpi, Test_arr3_term6) {
   }
 
   sidorina_p_broadcast_mpi::Broadcast testMpiTaskParallel(taskDataGlob);
-  ASSERT_EQ(testMpiTaskParallel.validation(), true);
+  if (world.rank() == 0) {
+    ASSERT_EQ(testMpiTaskParallel.validation(), true);
+  }
   testMpiTaskParallel.pre_processing();
   testMpiTaskParallel.run();
   testMpiTaskParallel.post_processing();
@@ -156,7 +162,9 @@ TEST(sidorina_p_broadcast_mpi, Test_arr3_term6) {
     taskDataRef->outputs_count.emplace_back(result.size());
   }
   sidorina_p_broadcast_mpi::RefBroadcast testMpiTaskSequential(taskDataRef);
-  ASSERT_EQ(testMpiTaskSequential.validation(), true);
+  if (world.rank() == 0) {
+    ASSERT_EQ(testMpiTaskSequential.validation(), true);
+  }
   testMpiTaskSequential.pre_processing();
   testMpiTaskSequential.run();
   testMpiTaskSequential.post_processing();
@@ -207,7 +215,9 @@ TEST(sidorina_p_broadcast_mpi, Test_random) {
   }
 
   sidorina_p_broadcast_mpi::Broadcast testMpiTaskParallel(taskDataGlob);
-  ASSERT_EQ(testMpiTaskParallel.validation(), true);
+  if (world.rank() == 0) {
+    ASSERT_EQ(testMpiTaskParallel.validation(), true);
+  }
   testMpiTaskParallel.pre_processing();
   testMpiTaskParallel.run();
   testMpiTaskParallel.post_processing();
@@ -223,7 +233,9 @@ TEST(sidorina_p_broadcast_mpi, Test_random) {
     taskDataRef->outputs_count.emplace_back(result.size());
   }
   sidorina_p_broadcast_mpi::RefBroadcast testMpiTaskSequential(taskDataRef);
-  ASSERT_EQ(testMpiTaskSequential.validation(), true);
+  if (world.rank() == 0) {
+    ASSERT_EQ(testMpiTaskSequential.validation(), true);
+  }
   testMpiTaskSequential.pre_processing();
   testMpiTaskSequential.run();
   testMpiTaskSequential.post_processing();
@@ -259,7 +271,9 @@ TEST(sidorina_p_broadcast_mpi, Test_validation_array_1) {
   }
 
   sidorina_p_broadcast_mpi::Broadcast testMpiTaskParallel(taskDataGlob);
-  ASSERT_EQ(testMpiTaskParallel.validation(), false);
+  if (world.rank() == 0) {
+    ASSERT_EQ(testMpiTaskParallel.validation(), false);
+  }
 }
 TEST(sidorina_p_broadcast_mpi, Test_validation_terms_1) {
   boost::mpi::communicator world;
@@ -287,7 +301,9 @@ TEST(sidorina_p_broadcast_mpi, Test_validation_terms_1) {
   }
 
   sidorina_p_broadcast_mpi::Broadcast testMpiTaskParallel(taskDataGlob);
-  ASSERT_EQ(testMpiTaskParallel.validation(), false);
+  if (world.rank() == 0) {
+    ASSERT_EQ(testMpiTaskParallel.validation(), false);
+  }
 }
 
 TEST(sidorina_p_broadcast_mpi, Test_validation_1) {
@@ -316,5 +332,7 @@ TEST(sidorina_p_broadcast_mpi, Test_validation_1) {
   }
 
   sidorina_p_broadcast_mpi::Broadcast testMpiTaskParallel(taskDataGlob);
-  ASSERT_EQ(testMpiTaskParallel.validation(), false);
-}*/
+  if (world.rank() == 0) {
+    ASSERT_EQ(testMpiTaskParallel.validation(), false);
+  }
+}
