@@ -1,4 +1,4 @@
-/*#include <gtest/gtest.h>
+#include <gtest/gtest.h>
 
 #include <boost/mpi/communicator.hpp>
 #include <boost/mpi/environment.hpp>
@@ -60,7 +60,7 @@ TEST(sidorina_p_broadcast_mpi, Test_arr3_term2) {
   }
 }
 
-TEST(sidorina_p_broadcast_mpi, Test_arr3_term3) {
+/*TEST(sidorina_p_broadcast_mpi, Test_arr3_term3) {
   boost::mpi::communicator world;
 
   std::vector<int> array;
