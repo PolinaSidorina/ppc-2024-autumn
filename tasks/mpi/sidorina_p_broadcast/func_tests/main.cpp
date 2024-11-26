@@ -8,7 +8,7 @@
 #include "mpi/sidorina_p_broadcast/include/ops_mpi.hpp"
 #include "mpi/sidorina_p_broadcast/include/ops_mpi_m.hpp"
 
-TEST(sidorina_p_broadcast_mpi, Test_arr3_term2) {
+/*TEST(sidorina_p_broadcast_mpi, Test_arr3_term2) {
   boost::mpi::communicator world;
 
   std::vector<int> array;
@@ -58,9 +58,9 @@ TEST(sidorina_p_broadcast_mpi, Test_arr3_term2) {
   if (world.rank() == 0) {
     ASSERT_EQ(m_result, result);
   }
-}
+}*/
 
-/*TEST(sidorina_p_broadcast_mpi, Test_arr3_term3) {
+TEST(sidorina_p_broadcast_mpi, Test_arr3_term3) {
   boost::mpi::communicator world;
 
   std::vector<int> array;
@@ -112,7 +112,7 @@ TEST(sidorina_p_broadcast_mpi, Test_arr3_term2) {
   }
 }
 
-TEST(sidorina_p_broadcast_mpi, Test_arr3_term6) {
+/*TEST(sidorina_p_broadcast_mpi, Test_arr3_term6) {
   boost::mpi::communicator world;
 
   std::vector<int> array;
