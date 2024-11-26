@@ -14,13 +14,20 @@
 
 namespace sidorina_p_broadcast_mpi {
 
-class RefBroadcast : public ppc::core::Task {
+class Broadcast : public ppc::core::Task {
  public:
-  explicit RefBroadcast(std::shared_ptr<ppc::core::TaskData> taskData_) : Task(std::move(taskData_)) {}
+  explicit Broadcast(std::shared_ptr<ppc::core::TaskData> taskData_) : Task(std::move(taskData_)) {}
   bool pre_processing() override;
   bool validation() override;
   bool run() override;
   bool post_processing() override;
+
+  template <typename T>
+  static void broadcast_m(const boost::mpi::communicator& comm, T& value, int root);
+  template <typename T>
+  static void broadcast_m(const boost::mpi::communicator& comm, T* value, int n, int root);
+
+  std::function<void(const boost::mpi::communicator&, int*, int, int)> broadcast_fn;
 
  private:
   std::vector<int> arr;

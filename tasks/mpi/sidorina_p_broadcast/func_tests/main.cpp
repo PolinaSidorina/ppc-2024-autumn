@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "mpi/sidorina_p_broadcast/include/ops_mpi.hpp"
-#include "mpi/sidorina_p_broadcast/include/ops_mpi_m.hpp"
 
 /*TEST(sidorina_p_broadcast_mpi, Test_arr3_term2) {
   boost::mpi::communicator world;
@@ -72,8 +71,8 @@ TEST(sidorina_p_broadcast_mpi, Test_arr3_term3) {
   std::shared_ptr<ppc::core::TaskData> taskDataRef = std::make_shared<ppc::core::TaskData>();
 
   if (world.rank() == 0) {
-    array = std::vector<int>({1, 2, 4});
-    terms = std::vector<int>({1, 2, 3});
+    array = std::vector<int>({1, -2, 4});
+    terms = std::vector<int>({1, 2, -3});
 
     m_result.resize(array.size(), 0);
 
@@ -86,6 +85,9 @@ TEST(sidorina_p_broadcast_mpi, Test_arr3_term3) {
   }
 
   sidorina_p_broadcast_mpi::Broadcast testMpiTaskParallel(taskDataGlob);
+  testMpiTaskParallel.broadcast_fn = [](const boost::mpi::communicator& comm, int* values, int n, int root) {
+    sidorina_p_broadcast_mpi::Broadcast::broadcast_m(comm, values, n, root);
+  };
   ASSERT_EQ(testMpiTaskParallel.validation(), true);
   testMpiTaskParallel.pre_processing();
   testMpiTaskParallel.run();
@@ -101,7 +103,10 @@ TEST(sidorina_p_broadcast_mpi, Test_arr3_term3) {
     taskDataRef->outputs.emplace_back(reinterpret_cast<uint8_t*>(result.data()));
     taskDataRef->outputs_count.emplace_back(result.size());
   }
-  sidorina_p_broadcast_mpi::RefBroadcast testMpiTaskSequential(taskDataRef);
+  sidorina_p_broadcast_mpi::Broadcast testMpiTaskSequential(taskDataRef);
+  testMpiTaskSequential.broadcast_fn = [](const boost::mpi::communicator& comm, int* values, int n, int root) {
+    boost::mpi::broadcast(comm, values, n, root);
+  };
   ASSERT_EQ(testMpiTaskSequential.validation(), true);
   testMpiTaskSequential.pre_processing();
   testMpiTaskSequential.run();

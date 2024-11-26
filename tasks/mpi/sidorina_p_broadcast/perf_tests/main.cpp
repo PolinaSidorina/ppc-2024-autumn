@@ -5,7 +5,6 @@
 
 #include "core/perf/include/perf.hpp"
 #include "mpi/sidorina_p_broadcast/include/ops_mpi.hpp"
-#include "mpi/sidorina_p_broadcast/include/ops_mpi_m.hpp"
 
 TEST(sidorina_p_broadcast_mpi, test_pipeline_run_m) {
   boost::mpi::communicator world;
@@ -15,7 +14,7 @@ TEST(sidorina_p_broadcast_mpi, test_pipeline_run_m) {
   std::vector<int> terms;
   std::vector<int> result;
 
-  std::shared_ptr<ppc::core::TaskData> taskDataPar = std::make_shared<ppc::core::TaskData>();
+  std::shared_ptr<ppc::core::TaskData> taskDataGlob = std::make_shared<ppc::core::TaskData>();\
 
   if (world.rank() == 0) {
     int sz1 = 1000000;
@@ -32,15 +31,18 @@ TEST(sidorina_p_broadcast_mpi, test_pipeline_run_m) {
       }
     }
 
-    taskDataPar->inputs.emplace_back(reinterpret_cast<uint8_t*>(array.data()));
-    taskDataPar->inputs_count.emplace_back(array.size());
-    taskDataPar->inputs.emplace_back(reinterpret_cast<uint8_t*>(terms.data()));
-    taskDataPar->inputs_count.emplace_back(terms.size());
-    taskDataPar->outputs.emplace_back(reinterpret_cast<uint8_t*>(result.data()));
-    taskDataPar->outputs_count.emplace_back(result.size());
+    taskDataGlob->inputs.emplace_back(reinterpret_cast<uint8_t*>(array.data()));
+    taskDataGlob->inputs_count.emplace_back(array.size());
+    taskDataGlob->inputs.emplace_back(reinterpret_cast<uint8_t*>(terms.data()));
+    taskDataGlob->inputs_count.emplace_back(terms.size());
+    taskDataGlob->outputs.emplace_back(reinterpret_cast<uint8_t*>(result.data()));
+    taskDataGlob->outputs_count.emplace_back(result.size());
   }
 
-  auto testMpiTaskParallel = std::make_shared<sidorina_p_broadcast_mpi::Broadcast>(taskDataPar);
+  auto testMpiTaskParallel = std::make_shared<sidorina_p_broadcast_mpi::Broadcast>(taskDataGlob);
+  testMpiTaskParallel->broadcast_fn = [](const boost::mpi::communicator& comm, int* values, int n, int root) {
+    sidorina_p_broadcast_mpi::Broadcast::broadcast_m(comm, values, n, root);
+  };
   ASSERT_EQ(testMpiTaskParallel->validation(), true);
   testMpiTaskParallel->pre_processing();
   testMpiTaskParallel->run();
@@ -94,7 +96,10 @@ TEST(sidorina_p_broadcast_mpi, test_pipeline_run) {
     taskData->outputs_count.emplace_back(result.size());
   }
 
-  auto testMpiTaskParallel = std::make_shared<sidorina_p_broadcast_mpi::RefBroadcast>(taskData);
+  auto testMpiTaskParallel = std::make_shared<sidorina_p_broadcast_mpi::Broadcast>(taskData);
+  testMpiTaskParallel->broadcast_fn = [](const boost::mpi::communicator& comm, int* values, int n, int root) {
+    boost::mpi::broadcast(comm, values, n, root);
+  };
   ASSERT_EQ(testMpiTaskParallel->validation(), true);
   testMpiTaskParallel->pre_processing();
   testMpiTaskParallel->run();
@@ -123,7 +128,6 @@ TEST(sidorina_p_broadcast_mpi, test_task_run_m) {
   std::vector<int> terms;
   std::vector<int> result;
 
-  // Create TaskData
   std::shared_ptr<ppc::core::TaskData> taskDataPar = std::make_shared<ppc::core::TaskData>();
 
   if (world.rank() == 0) {
@@ -150,6 +154,9 @@ TEST(sidorina_p_broadcast_mpi, test_task_run_m) {
   }
 
   auto testMpiTaskParallel = std::make_shared<sidorina_p_broadcast_mpi::Broadcast>(taskDataPar);
+  testMpiTaskParallel->broadcast_fn = [](const boost::mpi::communicator& comm, int* values, int n, int root) {
+    sidorina_p_broadcast_mpi::Broadcast::broadcast_m(comm, values, n, root);
+  };
   ASSERT_EQ(testMpiTaskParallel->validation(), true);
   testMpiTaskParallel->pre_processing();
   testMpiTaskParallel->run();
@@ -178,7 +185,6 @@ TEST(sidorina_p_broadcast_mpi, test_task_run) {
   std::vector<int> terms;
   std::vector<int> result;
 
-  // Create TaskData
   std::shared_ptr<ppc::core::TaskData> taskDataPar = std::make_shared<ppc::core::TaskData>();
 
   if (world.rank() == 0) {
@@ -204,22 +210,22 @@ TEST(sidorina_p_broadcast_mpi, test_task_run) {
     taskDataPar->outputs_count.emplace_back(result.size());
   }
 
-  auto testMpiTaskParallel = std::make_shared<sidorina_p_broadcast_mpi::RefBroadcast>(taskDataPar);
+  auto testMpiTaskParallel = std::make_shared<sidorina_p_broadcast_mpi::Broadcast>(taskDataPar);
+  testMpiTaskParallel->broadcast_fn = [](const boost::mpi::communicator& comm, int* values, int n, int root) {
+    boost::mpi::broadcast(comm, values, n, root);
+  };
   ASSERT_EQ(testMpiTaskParallel->validation(), true);
   testMpiTaskParallel->pre_processing();
   testMpiTaskParallel->run();
   testMpiTaskParallel->post_processing();
 
-  // Create Perf attributes
   auto perfAttr = std::make_shared<ppc::core::PerfAttr>();
   perfAttr->num_running = 10;
   const boost::mpi::timer current_timer;
   perfAttr->current_timer = [&] { return current_timer.elapsed(); };
 
-  // Create and init perf results
   auto perfResults = std::make_shared<ppc::core::PerfResults>();
 
-  // Create Perf analyzer
   auto perfAnalyzer = std::make_shared<ppc::core::Perf>(testMpiTaskParallel);
   perfAnalyzer->pipeline_run(perfAttr, perfResults);
   if (world.rank() == 0) {

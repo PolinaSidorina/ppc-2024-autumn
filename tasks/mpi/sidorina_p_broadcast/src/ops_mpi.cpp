@@ -9,7 +9,72 @@
 
 using namespace boost::mpi;
 
-bool sidorina_p_broadcast_mpi::RefBroadcast::pre_processing() {
+template <typename T>
+inline void sidorina_p_broadcast_mpi::Broadcast::broadcast_m(const boost::mpi::communicator& comm, T& value, int root) {
+  int n = comm.size();
+  if (n <= 2) {
+    if (comm.rank() == root) {
+      if (n == 1) {
+        return;
+      } else {
+        comm.send(1 - root, 0, value);
+      }
+    } else {
+      comm.recv(root, 0, value);
+    }
+    return;
+  }
+
+  std::vector<int> recipients(comm.size());
+
+  if (comm.rank() == root) {
+    recipients[(root + 1) % comm.size()] = value;
+    recipients[(root + 2) % comm.size()] = value;
+  } else {
+    int id_elem = comm.rank() - root;
+    if (comm.rank() < root) {
+      id_elem = comm.size() - root + comm.rank();
+    }
+
+    int id_sender = (root + (id_elem - 1) / 2) % comm.size();
+    comm.recv(id_sender, 0, value);
+  }
+}
+
+template <typename T>
+inline void sidorina_p_broadcast_mpi::Broadcast::broadcast_m(const boost::mpi::communicator& comm, T* value, int n,
+                                                             int root) {
+  if (n <= 2) {
+    if (comm.rank() == root) {
+      if (n == 1) {
+        return;
+      } else {
+        comm.send(1 - root, 0, value, n);
+      }
+    } else {
+      comm.recv(root, 0, value, n);
+    }
+    return;
+  }
+
+  std::vector<int> recipients(comm.size());
+
+  if (comm.rank() == root) {
+    recipients[(root + 1) % comm.size()] = *value;
+    recipients[(root + 2) % comm.size()] = *value;
+  } else {
+    int id_el = comm.rank() - root;
+    if (comm.rank() < root) {
+      id_el = comm.size() - root + comm.rank();
+    }
+
+    int id_send = (root + (id_el - 1) / 2) % comm.size();
+
+    comm.recv(id_send, 0, value, n);
+  }
+}
+
+bool sidorina_p_broadcast_mpi::Broadcast::pre_processing() {
   internal_order_test();
 
   if (world.rank() == 0) {
@@ -27,7 +92,7 @@ bool sidorina_p_broadcast_mpi::RefBroadcast::pre_processing() {
   return true;
 }
 
-bool sidorina_p_broadcast_mpi::RefBroadcast::validation() {
+bool sidorina_p_broadcast_mpi::Broadcast::validation() {
   internal_order_test();
   if (world.rank() == 0) {
     return taskData->inputs_count[0] > 0 && taskData->inputs_count[1] > 0 && taskData->outputs_count[0] > 0 &&
@@ -36,12 +101,12 @@ bool sidorina_p_broadcast_mpi::RefBroadcast::validation() {
   return true;
 }
 
-bool sidorina_p_broadcast_mpi::RefBroadcast::run() {
+bool sidorina_p_broadcast_mpi::Broadcast::run() {
   internal_order_test();
 
   int root = 0;
-  broadcast(world, del, 0);
-  broadcast(world, sz, 0);
+  broadcast_m(world, del, 0);
+  broadcast_m(world, sz, 0);
 
   res.resize(sz, 0);
   if (world.rank() != root) {
@@ -51,13 +116,14 @@ bool sidorina_p_broadcast_mpi::RefBroadcast::run() {
     std::copy(term.data(), term.data(), arr.begin());
   }
 
-  broadcast(world, arr.data(), arr.size(), 0);
+  broadcast_m(world, arr.data(), arr.size(), 0);
 
   if (world.rank() == root) {
     for (int p = 1; p < world.size(); ++p) {
       world.send(p, 0, term.data() + p * del, del);
     }
   } else {
+    term.resize(del);
     world.recv(0, 0, term.data(), del);
   }
 
@@ -77,7 +143,7 @@ bool sidorina_p_broadcast_mpi::RefBroadcast::run() {
   return true;
 }
 
-bool sidorina_p_broadcast_mpi::RefBroadcast::post_processing() {
+bool sidorina_p_broadcast_mpi::Broadcast::post_processing() {
   internal_order_test();
   if (world.rank() == 0) {
     int* answer = reinterpret_cast<int*>(taskData->outputs[0]);
