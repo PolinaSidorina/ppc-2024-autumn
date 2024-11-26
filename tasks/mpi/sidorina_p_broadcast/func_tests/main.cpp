@@ -34,7 +34,9 @@ TEST(sidorina_p_broadcast_mpi, Test_arr3_term2) {
   }
 
   sidorina_p_broadcast_mpi::Broadcast testMpiTaskParallel(taskDataGlob);
-  ASSERT_TRUE(testMpiTaskParallel.validation());
+  if (world.rank() == 0) {
+    ASSERT_TRUE(testMpiTaskParallel.validation());
+  }
   testMpiTaskParallel.pre_processing();
   testMpiTaskParallel.run();
   testMpiTaskParallel.post_processing();
@@ -50,7 +52,9 @@ TEST(sidorina_p_broadcast_mpi, Test_arr3_term2) {
     taskDataRef->outputs_count.emplace_back(result.size());
   }
   sidorina_p_broadcast_mpi::RefBroadcast testMpiTaskSequential(taskDataRef);
-  ASSERT_TRUE(testMpiTaskSequential.validation());
+  if (world.rank() == 0) {
+    ASSERT_TRUE(testMpiTaskSequential.validation());
+  }
   testMpiTaskSequential.pre_processing();
   testMpiTaskSequential.run();
   testMpiTaskSequential.post_processing();
