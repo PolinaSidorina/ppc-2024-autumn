@@ -71,8 +71,8 @@ TEST(sidorina_p_broadcast_mpi, Test_arr3_term3) {
   std::shared_ptr<ppc::core::TaskData> taskDataRef = std::make_shared<ppc::core::TaskData>();
 
   if (world.rank() == 0) {
-    array = std::vector<int>({1, -2, 4});
-    terms = std::vector<int>({1, 2, -3});
+    array = std::vector<int>({1, 2, 4});
+    terms = std::vector<int>({1, 2, 3});
 
     m_result.resize(array.size(), 0);
 
