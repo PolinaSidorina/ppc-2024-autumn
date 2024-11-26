@@ -11,47 +11,53 @@
 TEST(sidorina_p_broadcast_mpi, Test_arr3_term2) {
   boost::mpi::communicator world;
 
-  std::vector<int> reference;
   std::vector<int> array;
   std::vector<int> terms;
+  std::vector<int> m_result;
   std::vector<int> result;
 
-  // Create TaskData
-  std::shared_ptr<ppc::core::TaskData> taskDataPar = std::make_shared<ppc::core::TaskData>();
+  std::shared_ptr<ppc::core::TaskData> taskDataGlob = std::make_shared<ppc::core::TaskData>();
+  std::shared_ptr<ppc::core::TaskData> taskDataRef = std::make_shared<ppc::core::TaskData>();
 
   if (world.rank() == 0) {
-    int sz1 = 10;
-    int sz2 = 2;
-    array.resize(sz1);
-    reference.resize(sz1);
-    terms.resize(sz2, 1);
-    result.resize(sz1);
-    for (int i = 0; i < sz1; i++) {
-      array[i] = i;
-      for (int j = 0; j < sz2; j++) {
-        int a = array[i] + terms[j];
-        reference[i] += a;
-      }
-    }
+    array = std::vector<int>({1, 2, 3});
+    terms = std::vector<int>({1, 2});
 
-    taskDataPar->inputs.emplace_back(reinterpret_cast<uint8_t*>(array.data()));
-    taskDataPar->inputs_count.emplace_back(array.size());
-    taskDataPar->inputs.emplace_back(reinterpret_cast<uint8_t*>(terms.data()));
-    taskDataPar->inputs_count.emplace_back(terms.size());
-    taskDataPar->outputs.emplace_back(reinterpret_cast<uint8_t*>(result.data()));
-    taskDataPar->outputs_count.emplace_back(result.size());
+    m_result.resize(array.size(), 0);
+
+    taskDataGlob->inputs.emplace_back(reinterpret_cast<uint8_t*>(array.data()));
+    taskDataGlob->inputs_count.emplace_back(array.size());
+    taskDataGlob->inputs.emplace_back(reinterpret_cast<uint8_t*>(terms.data()));
+    taskDataGlob->inputs_count.emplace_back(terms.size());
+    taskDataGlob->outputs.emplace_back(reinterpret_cast<uint8_t*>(m_result.data()));
+    taskDataGlob->outputs_count.emplace_back(m_result.size());
   }
 
-  auto testMpiTaskParallel = std::make_shared<sidorina_p_broadcast_mpi::Broadcast>(taskDataPar);
-  ASSERT_EQ(testMpiTaskParallel->validation(), true);
-  testMpiTaskParallel->pre_processing();
-  testMpiTaskParallel->run();
-  testMpiTaskParallel->post_processing();
+  sidorina_p_broadcast_mpi::Broadcast testMpiTaskParallel(taskDataGlob);
+  ASSERT_TRUE(testMpiTaskParallel.validation());
+  testMpiTaskParallel.pre_processing();
+  testMpiTaskParallel.run();
+  testMpiTaskParallel.post_processing();
 
   if (world.rank() == 0) {
-    ASSERT_EQ(reference, result);
+    result.resize(array.size(), 0);
+
+    taskDataRef->inputs.emplace_back(reinterpret_cast<uint8_t*>(array.data()));
+    taskDataRef->inputs_count.emplace_back(array.size());
+    taskDataRef->inputs.emplace_back(reinterpret_cast<uint8_t*>(terms.data()));
+    taskDataRef->inputs_count.emplace_back(terms.size());
+    taskDataRef->outputs.emplace_back(reinterpret_cast<uint8_t*>(result.data()));
+    taskDataRef->outputs_count.emplace_back(result.size());
   }
+  sidorina_p_broadcast_mpi::RefBroadcast testMpiTaskSequential(taskDataRef);
+  ASSERT_TRUE(testMpiTaskSequential.validation());
+  testMpiTaskSequential.pre_processing();
+  testMpiTaskSequential.run();
+  testMpiTaskSequential.post_processing();
+
+  ASSERT_EQ(m_result, result);
 }
+
 /*TEST(sidorina_p_broadcast_mpi, Test_arr3_term3) {
   boost::mpi::communicator world;
 

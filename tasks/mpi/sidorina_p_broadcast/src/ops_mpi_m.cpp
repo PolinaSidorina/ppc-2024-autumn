@@ -105,8 +105,8 @@ bool sidorina_p_broadcast_mpi::Broadcast::run() {
   internal_order_test();
 
   int root = 0;
-  MPI_Bcast(&del, 1, MPI_INT, root, world);
-  MPI_Bcast(&sz, 1, MPI_INT, root, world);
+  broadcast(world, del, 0);
+  broadcast(world, sz, 0);
 
   res.resize(sz, 0);
   if (world.rank() != root) {
@@ -116,14 +116,14 @@ bool sidorina_p_broadcast_mpi::Broadcast::run() {
     std::copy(term.data(), term.data(), arr.begin());
   }
 
-  MPI_Bcast(arr.data(), sz, MPI_INT, root, world);
+  broadcast(world, arr.data(), arr.size(), 0);
 
   if (world.rank() == root) {
     for (int p = 1; p < world.size(); ++p) {
-      MPI_Send(term.data() + p * del, del, MPI_INT, p, 0, world);
+      world.send(p, 0, term.data() + p * del, del);
     }
   } else {
-    MPI_Recv(term.data(), del, MPI_INT, root, 0, world, MPI_STATUS_IGNORE);
+    world.recv(0, 0, term.data(), del);
   }
 
   for (int i = 0; i < static_cast<int>(arr.size()); i++) {
