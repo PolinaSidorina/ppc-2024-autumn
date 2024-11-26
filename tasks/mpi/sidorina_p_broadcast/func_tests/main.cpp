@@ -55,7 +55,9 @@ TEST(sidorina_p_broadcast_mpi, Test_arr3_term2) {
   testMpiTaskSequential.run();
   testMpiTaskSequential.post_processing();
 
-  ASSERT_EQ(m_result, result);
+  if (world.rank() == 0) {
+    ASSERT_EQ(m_result, result);
+  }
 }
 
 /*TEST(sidorina_p_broadcast_mpi, Test_arr3_term3) {

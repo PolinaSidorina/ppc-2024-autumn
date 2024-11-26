@@ -51,7 +51,7 @@ bool sidorina_p_broadcast_mpi::RefBroadcast::run() {
     std::copy(term.data(), term.data(), arr.begin());
   }
 
- broadcast(world, arr.data(), arr.size(), 0);
+  broadcast(world, arr.data(), arr.size(), 0);
 
   if (world.rank() == root) {
     for (int p = 1; p < world.size(); ++p) {
