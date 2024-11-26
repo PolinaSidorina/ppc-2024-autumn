@@ -15,7 +15,6 @@ TEST(sidorina_p_broadcast_mpi, test_pipeline_run_m) {
   std::vector<int> terms;
   std::vector<int> result;
 
-  // Create TaskData
   std::shared_ptr<ppc::core::TaskData> taskDataPar = std::make_shared<ppc::core::TaskData>();
 
   if (world.rank() == 0) {
@@ -47,16 +46,13 @@ TEST(sidorina_p_broadcast_mpi, test_pipeline_run_m) {
   testMpiTaskParallel->run();
   testMpiTaskParallel->post_processing();
 
-  // Create Perf attributes
   auto perfAttr = std::make_shared<ppc::core::PerfAttr>();
   perfAttr->num_running = 10;
   const boost::mpi::timer current_timer;
   perfAttr->current_timer = [&] { return current_timer.elapsed(); };
 
-  // Create and init perf results
   auto perfResults = std::make_shared<ppc::core::PerfResults>();
 
-  // Create Perf analyzer
   auto perfAnalyzer = std::make_shared<ppc::core::Perf>(testMpiTaskParallel);
   perfAnalyzer->pipeline_run(perfAttr, perfResults);
   if (world.rank() == 0) {
@@ -73,8 +69,7 @@ TEST(sidorina_p_broadcast_mpi, test_pipeline_run) {
   std::vector<int> terms;
   std::vector<int> result;
 
-  // Create TaskData
-  std::shared_ptr<ppc::core::TaskData> taskDataPar = std::make_shared<ppc::core::TaskData>();
+  std::shared_ptr<ppc::core::TaskData> taskData = std::make_shared<ppc::core::TaskData>();
 
   if (world.rank() == 0) {
     int sz1 = 1000000;
@@ -91,30 +86,27 @@ TEST(sidorina_p_broadcast_mpi, test_pipeline_run) {
       }
     }
 
-    taskDataPar->inputs.emplace_back(reinterpret_cast<uint8_t*>(array.data()));
-    taskDataPar->inputs_count.emplace_back(array.size());
-    taskDataPar->inputs.emplace_back(reinterpret_cast<uint8_t*>(terms.data()));
-    taskDataPar->inputs_count.emplace_back(terms.size());
-    taskDataPar->outputs.emplace_back(reinterpret_cast<uint8_t*>(result.data()));
-    taskDataPar->outputs_count.emplace_back(result.size());
+    taskData->inputs.emplace_back(reinterpret_cast<uint8_t*>(array.data()));
+    taskData->inputs_count.emplace_back(array.size());
+    taskData->inputs.emplace_back(reinterpret_cast<uint8_t*>(terms.data()));
+    taskData->inputs_count.emplace_back(terms.size());
+    taskData->outputs.emplace_back(reinterpret_cast<uint8_t*>(result.data()));
+    taskData->outputs_count.emplace_back(result.size());
   }
 
-  auto testMpiTaskParallel = std::make_shared<sidorina_p_broadcast_mpi::RefBroadcast>(taskDataPar);
+  auto testMpiTaskParallel = std::make_shared<sidorina_p_broadcast_mpi::RefBroadcast>(taskData);
   ASSERT_EQ(testMpiTaskParallel->validation(), true);
   testMpiTaskParallel->pre_processing();
   testMpiTaskParallel->run();
   testMpiTaskParallel->post_processing();
 
-  // Create Perf attributes
   auto perfAttr = std::make_shared<ppc::core::PerfAttr>();
   perfAttr->num_running = 10;
   const boost::mpi::timer current_timer;
   perfAttr->current_timer = [&] { return current_timer.elapsed(); };
 
-  // Create and init perf results
   auto perfResults = std::make_shared<ppc::core::PerfResults>();
 
-  // Create Perf analyzer
   auto perfAnalyzer = std::make_shared<ppc::core::Perf>(testMpiTaskParallel);
   perfAnalyzer->pipeline_run(perfAttr, perfResults);
   if (world.rank() == 0) {
@@ -163,16 +155,13 @@ TEST(sidorina_p_broadcast_mpi, test_task_run_m) {
   testMpiTaskParallel->run();
   testMpiTaskParallel->post_processing();
 
-  // Create Perf attributes
   auto perfAttr = std::make_shared<ppc::core::PerfAttr>();
   perfAttr->num_running = 10;
   const boost::mpi::timer current_timer;
   perfAttr->current_timer = [&] { return current_timer.elapsed(); };
 
-  // Create and init perf results
   auto perfResults = std::make_shared<ppc::core::PerfResults>();
 
-  // Create Perf analyzer
   auto perfAnalyzer = std::make_shared<ppc::core::Perf>(testMpiTaskParallel);
   perfAnalyzer->pipeline_run(perfAttr, perfResults);
   if (world.rank() == 0) {
