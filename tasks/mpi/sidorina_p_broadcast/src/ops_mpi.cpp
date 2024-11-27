@@ -46,9 +46,6 @@ bool sidorina_p_broadcast_mpi::Broadcast::run() {
   res.resize(sz, 0);
   if (world.rank() != root) {
     arr.resize(sz);
-  } else {
-    arr.resize(sz);
-    std::copy(term.data(), term.data(), arr.begin());
   }
 
   broadcast_fn(world, arr.data(), arr.size(), 0);
@@ -57,10 +54,15 @@ bool sidorina_p_broadcast_mpi::Broadcast::run() {
     for (int p = 1; p < world.size(); ++p) {
       world.send(p, 0, term.data() + p * del, del);
     }
-  } else {
-    term.resize(del);
-    world.recv(0, 0, term.data(), del);
   }
+  std::vector<int> local_powers(del);
+
+  if (world.rank() == 0) {
+    std::copy(term.data(), term.data() + del, local_powers.begin());
+  } else {
+    world.recv(0, 0, local_powers.data(), del);
+  }
+
 
   for (int i = 0; i < static_cast<int>(arr.size()); i++) {
     int num = arr[i];
@@ -68,6 +70,9 @@ bool sidorina_p_broadcast_mpi::Broadcast::run() {
     for (int t : term) {
       if (t >= 0) {
         result += num + t;
+        std::cout << num << "-n ";
+        std::cout << t << "-t ";
+        std::cout << result << "-r ";
       }
     }
     arr[i] = result;

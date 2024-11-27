@@ -34,17 +34,18 @@ class Broadcast : public ppc::core::Task {
     }
     if (comm.size() <= 3) {
       if (comm.rank() == root) {
-        for (int i = 0; i < root; i++) {
-          comm.send(i, 0, value, n);
-        }
-        for (int i = root; i < comm.size(); i++) {
-          comm.send(i, 0, value, n);
-        } 
+          for (int i = 0; i < root; i++) {
+            comm.send(i, 0, value, n);
+          }
+          for (int i = root + 1; i < comm.size(); i++) {
+            comm.send(i, 0, value, n);
+          }
       } else {
         comm.recv(root, 0, value, n);
       }
       return;
     }
+
     if (comm.rank() == root) {
       comm.send((root + 1) % comm.size(), 0, value, n);
       comm.send((root + 2) % comm.size(), 0, value, n);
