@@ -40,8 +40,8 @@ bool sidorina_p_broadcast_mpi::Broadcast::run() {
   internal_order_test();
 
   int root = 0;
-  broadcast_m(world, del, 0);
-  broadcast_m(world, sz, 0);
+  broadcast_fn(world, &del, 1, 0);
+  broadcast_fn(world, &sz, 1, 0);
 
   res.resize(sz, 0);
   if (world.rank() != root) {
@@ -51,7 +51,7 @@ bool sidorina_p_broadcast_mpi::Broadcast::run() {
     std::copy(term.data(), term.data(), arr.begin());
   }
 
-  broadcast_m(world, arr.data(), arr.size(), 0);
+  broadcast_fn(world, arr.data(), arr.size(), 0);
 
   if (world.rank() == root) {
     for (int p = 1; p < world.size(); ++p) {
@@ -81,8 +81,8 @@ bool sidorina_p_broadcast_mpi::Broadcast::run() {
 bool sidorina_p_broadcast_mpi::Broadcast::post_processing() {
   internal_order_test();
   if (world.rank() == 0) {
-    int* answer = reinterpret_cast<int*>(taskData->outputs[0]);
-    std::copy(res.begin(), res.end(), answer);
+    int* out = reinterpret_cast<int*>(taskData->outputs[0]);
+    std::copy(res.begin(), res.end(), out);
   }
   return true;
 }

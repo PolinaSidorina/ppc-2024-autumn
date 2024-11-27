@@ -14,7 +14,7 @@ TEST(sidorina_p_broadcast_mpi, test_pipeline_run_m) {
   std::vector<int> terms;
   std::vector<int> result;
 
-  std::shared_ptr<ppc::core::TaskData> taskDataGlob = std::make_shared<ppc::core::TaskData>();\
+  std::shared_ptr<ppc::core::TaskData> taskDataGlob = std::make_shared<ppc::core::TaskData>();
 
   if (world.rank() == 0) {
     int sz1 = 1000000;
